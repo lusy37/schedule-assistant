@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=日程助手
+Comment=本地优先的日程待办提醒软件
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/scheduleassistant.exe %u
+Terminal=false
+Type=Application
+Icon=scheduleassistant.exe
+Categories=Utility;
+StartupWMClass=scheduleassistant.exe
+
+ 

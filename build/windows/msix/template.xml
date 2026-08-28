@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MsixPackagingToolTemplate
+    xmlns="http://schemas.microsoft.com/msix/packaging/msixpackagingtool/template/2022">
+    <Settings
+        AllowTelemetry="false"
+        ApplyACLsToPackageFiles="true"
+        GenerateCommandLineFile="true"
+        AllowPromptForPassword="false">
+    </Settings>
+    <Installer
+        Path="scheduleassistant.exe"
+        Arguments=""
+        InstallLocation="C:\Program Files\Local\日程助手">
+    </Installer>
+    <PackageInformation
+        PackageName="日程助手"
+        PackageDisplayName="日程助手"
+        PublisherName="CN=Local"
+        PublisherDisplayName="Local"
+        Version="0.1.0.0"
+        PackageDescription="本地优先的日程待办提醒软件">
+        <Capabilities>
+            <Capability Name="runFullTrust" />
+            
+        </Capabilities>
+        <Applications>
+            <Application
+                Id="com.local.scheduleassistant"
+                Description="本地优先的日程待办提醒软件"
+                DisplayName="日程助手"
+                ExecutableName="scheduleassistant.exe"
+                EntryPoint="Windows.FullTrustApplication">
+                
+            </Application>
+        </Applications>
+        <Resources>
+            <Resource Language="en-us" />
+        </Resources>
+        <Dependencies>
+            <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+        </Dependencies>
+        <Properties>
+            <Framework>false</Framework>
+            <DisplayName>日程助手</DisplayName>
+            <PublisherDisplayName>Local</PublisherDisplayName>
+            <Description>本地优先的日程待办提醒软件</Description>
+            <Logo>Assets\AppIcon.png</Logo>
+        </Properties>
+    </PackageInformation>
+    <SaveLocation PackagePath="scheduleassistant.msix" />
+    <PackageIntegrity>
+        <CertificatePath></CertificatePath>
+    </PackageIntegrity>
+</MsixPackagingToolTemplate>

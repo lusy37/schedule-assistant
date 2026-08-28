@@ -1,0 +1,15 @@
+{
+	"fixed": {
+		"file_version": "0.1.0"
+	},
+	"info": {
+		"0000": {
+			"ProductVersion": "0.1.0",
+			"CompanyName": "Local",
+			"FileDescription": "本地优先的日程待办提醒软件",
+			"LegalCopyright": "Copyright 2026",
+			"ProductName": "日程助手",
+			"Comments": "使用 Wails 3、Go、React 和 SQLite 构建"
+		}
+	}
+}
