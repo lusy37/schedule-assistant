@@ -2,6 +2,28 @@
 
 日程助手是一款本地优先的桌面日程待办提醒软件。项目使用 Wails 3 组合 Go 后端与 React 前端，日程数据保存在本机 SQLite 数据库中，并通过系统通知发送提醒。
 
+## 界面预览
+
+### 日视图
+
+日视图按 08:00 至 21:00 的时间轴展示当天日程，左侧议程列表可快速查看和切换完成状态。
+
+![日程助手日视图](./docs/screenshots/day-view.png)
+
+### 周视图
+
+周视图集中展示一周安排，并显示每项日程完整的开始与结束时间。
+
+![日程助手周视图](./docs/screenshots/week-view.png)
+
+### 新建日程
+
+日期、时间范围、地点和多提醒在同一个表单中完成；时间选择范围与日历时间轴保持一致。
+
+![日程助手新建日程](./docs/screenshots/create-schedule.png)
+
+截图由浏览器开发预览生成；Wails 桌面版复用同一套 React 界面，并额外提供系统通知、托盘和开机启动能力。
+
 ## 已实现功能
 
 - 日视图与周视图，以及迷你月历导航
@@ -55,6 +77,13 @@ npm run dev
 
 ```powershell
 wails3 dev
+```
+
+需要更新 README 截图时，先启动浏览器预览，再在另一个终端执行：
+
+```powershell
+cd frontend
+npm run screenshots:readme
 ```
 
 ## 测试与构建

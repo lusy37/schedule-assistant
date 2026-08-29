@@ -8,6 +8,7 @@
     "build:dev": "tsc && vite build --minify false --mode development",
     "build": "tsc && vite build --mode production",
     "preview": "vite preview",
+    "screenshots:readme": "node scripts/capture-readme-screenshots.mjs",
     "test": "vitest run src",
     "test:watch": "vitest src",
     "test:e2e": "playwright test"
