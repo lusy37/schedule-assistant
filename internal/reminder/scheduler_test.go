@@ -122,6 +122,39 @@ func TestReminderSchedulerRestartUATMergesAllOverdueReminders(t *testing.T) {
 	}
 }
 
+func TestReminderNotificationIncludesScheduleDetailsWithoutSharedThread(t *testing.T) {
+	sender := &recordingNotificationSender{}
+	scheduler := New(nil, sender)
+	startAt := time.Date(2026, time.August, 28, 14, 0, 0, 0, time.Local)
+	endAt := startAt.Add(90 * time.Minute)
+	item := domain.Schedule{
+		ID:       "schedule-with-details",
+		Title:    "产品路线图规划会议",
+		Location: "会议室 B",
+		Notes:    "确认下季度目标和负责人",
+	}
+
+	if err := scheduler.deliver(item, 15, startAt, endAt, 1); err != nil {
+		t.Fatalf("发送详情提醒失败: %v", err)
+	}
+	if len(sender.items) != 1 {
+		t.Fatalf("应发送一条提醒: count=%d", len(sender.items))
+	}
+
+	got := sender.items[0]
+	if got.Title != item.Title {
+		t.Fatalf("通知标题应直接展示日程标题: title=%q", got.Title)
+	}
+	for _, detail := range []string{"14:00 - 15:30", "地点：会议室 B", "备注：确认下季度目标和负责人"} {
+		if !strings.Contains(got.Body, detail) {
+			t.Fatalf("通知正文缺少 %q: body=%q", detail, got.Body)
+		}
+	}
+	if got.ThreadID != "" {
+		t.Fatalf("不应使用共享通知分组，否则 Windows 会折叠为通用摘要: threadID=%q", got.ThreadID)
+	}
+}
+
 func TestReminderSchedulerKeepsFutureReminderAfterMerge(t *testing.T) {
 	store := createReminderTestStore(t)
 	sender := &recordingNotificationSender{}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -131,7 +132,7 @@ func (scheduler *Scheduler) scan(now time.Time) {
 				latest = candidate
 			}
 		}
-		if err := scheduler.deliver(item, latest.offset, startAt, len(due)); err != nil {
+		if err := scheduler.deliver(item, latest.offset, startAt, endAt, len(due)); err != nil {
 			log.Printf("发送提醒失败: %v", err)
 			continue
 		}
@@ -146,22 +147,31 @@ func (scheduler *Scheduler) scan(now time.Time) {
 	}
 }
 
-func (scheduler *Scheduler) deliver(item domain.Schedule, offset int, startAt time.Time, mergedCount int) error {
-	body := fmt.Sprintf("%s 开始", startAt.Local().Format("15:04"))
+func (scheduler *Scheduler) deliver(item domain.Schedule, offset int, startAt, endAt time.Time, mergedCount int) error {
+	bodyLines := []string{fmt.Sprintf(
+		"%s - %s",
+		startAt.Local().Format("15:04"),
+		endAt.Local().Format("15:04"),
+	)}
 	if item.Location != "" {
-		body += " · " + item.Location
+		bodyLines = append(bodyLines, "地点："+item.Location)
+	}
+	if item.Notes != "" {
+		bodyLines = append(bodyLines, "备注："+item.Notes)
 	}
 	if mergedCount > 1 {
-		body += fmt.Sprintf(" · 已合并 %d 个提醒", mergedCount)
+		bodyLines = append(bodyLines, fmt.Sprintf("已合并 %d 个提醒", mergedCount))
 	}
+	// Wails 3 beta.15 在 Windows 上为 ThreadID 生成的 toast header 缺少必填 arguments，
+	// 会让系统退化显示为“新通知”，因此在升级并验证框架修复前不设置 ThreadID。
 	return scheduler.notifications.SendNotification(notifications.NotificationOptions{
-		ID:    fmt.Sprintf("schedule-%s-%d", item.ID, offset),
-		Title: "日程提醒：" + item.Title,
-		Body:  body,
+		ID:       fmt.Sprintf("schedule-%s-%d", item.ID, offset),
+		Title:    item.Title,
+		Subtitle: "日程提醒",
+		Body:     strings.Join(bodyLines, "\n"),
 		Data: map[string]interface{}{
 			"scheduleId": item.ID,
 		},
-		ThreadID:          "schedule-assistant",
 		InterruptionLevel: notifications.InterruptionLevelActive,
 	})
 }
