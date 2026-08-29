@@ -26,9 +26,6 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Go 测试
-        run: go test ./...
-
       - name: 安装前端依赖
         working-directory: frontend
         run: npm ci
@@ -40,6 +37,12 @@ jobs:
       - name: 前端生产构建
         working-directory: frontend
         run: npm run build
+
+      - name: Go 测试
+        run: go test ./...
+
+      - name: Go 静态检查
+        run: go vet ./...
 
       - name: 浏览器 UAT
         working-directory: frontend
