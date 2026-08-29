@@ -13,7 +13,8 @@ description: 使用本机日程助手 CLI 创建或查询不跨天的日程和�
 
 1. 环境变量 `SCHEDULE_ASSISTANT_EXE` 指定的完整路径。
 2. `PATH` 中的 `scheduleassistant.exe`。
-3. 当前项目的 `bin/scheduleassistant.exe`。
+3. Windows 默认用户级安装路径 `%LOCALAPPDATA%\Programs\日程助手\scheduleassistant.exe`。
+4. 当前项目的 `bin/scheduleassistant.exe`。
 
 找不到时说明依赖缺失，并请用户提供安装位置。不要自行下载或替换桌面程序。
 
