@@ -12,6 +12,8 @@ const (
 	StatusPending   = "pending"
 	StatusCompleted = "completed"
 	StatusCancelled = "cancelled"
+	DayStartHour    = 8
+	DayEndHour      = 21
 )
 
 var allowedColours = map[string]struct{}{
@@ -91,6 +93,11 @@ func (input ScheduleInput) NormaliseAndValidate() (ScheduleInput, error) {
 	endYear, endMonth, endDay := endLocal.Date()
 	if startYear != endYear || startMonth != endMonth || startDay != endDay {
 		return input, errors.New("日程不能跨天")
+	}
+	dayStart := time.Date(startYear, startMonth, startDay, DayStartHour, 0, 0, 0, time.Local)
+	dayEnd := time.Date(startYear, startMonth, startDay, DayEndHour, 0, 0, 0, time.Local)
+	if startLocal.Before(dayStart) || endLocal.After(dayEnd) {
+		return input, errors.New("日程时间必须在 08:00 至 21:00 之间")
 	}
 
 	if _, ok := allowedColours[input.Colour]; !ok {

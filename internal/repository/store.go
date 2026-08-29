@@ -278,10 +278,6 @@ func (s *Store) WasReminderDelivered(ctx context.Context, scheduleID string, off
 	return count > 0, err
 }
 
-func (s *Store) MarkReminderDelivered(ctx context.Context, scheduleID string, offsetMinutes int, triggerAt time.Time) error {
-	return s.MarkRemindersDelivered(ctx, scheduleID, map[int]time.Time{offsetMinutes: triggerAt})
-}
-
 // MarkRemindersDelivered 在同一事务中记录一次合并通知处理的所有提醒。
 func (s *Store) MarkRemindersDelivered(ctx context.Context, scheduleID string, reminders map[int]time.Time) error {
 	if len(reminders) == 0 {

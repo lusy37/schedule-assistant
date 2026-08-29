@@ -46,7 +46,7 @@ func TestStoreScheduleLifecycle(t *testing.T) {
 	}
 
 	triggerAt := start.Add(-15 * time.Minute)
-	if err := store.MarkReminderDelivered(context.Background(), created.ID, 15, triggerAt); err != nil {
+	if err := store.MarkRemindersDelivered(context.Background(), created.ID, map[int]time.Time{15: triggerAt}); err != nil {
 		t.Fatalf("记录提醒状态失败: %v", err)
 	}
 	delivered, err := store.WasReminderDelivered(context.Background(), created.ID, 15, triggerAt)

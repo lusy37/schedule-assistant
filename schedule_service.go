@@ -36,6 +36,7 @@ func NewScheduleService(store *repository.Store, databasePath string, notificati
 	}
 }
 
+//wails:ignore
 func (service *ScheduleService) BindApplication(app *application.App, window *application.WebviewWindow) {
 	service.app = app
 	service.window = window
@@ -145,18 +146,14 @@ func (service *ScheduleService) HideWindow() {
 	}
 }
 
+//wails:ignore
 func (service *ScheduleService) ShowWindow() {
 	if service.window != nil {
 		service.window.Show().Focus()
 	}
 }
 
-func (service *ScheduleService) Quit() {
-	if service.app != nil {
-		service.app.Quit()
-	}
-}
-
+//wails:ignore
 func (service *ScheduleService) WakeScheduler() {
 	service.scheduler.Wake()
 }

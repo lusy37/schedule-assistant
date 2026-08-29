@@ -6,6 +6,7 @@ import (
 	"os"
 	"slices"
 
+	"schedule-assistant/internal/cli"
 	"schedule-assistant/internal/repository"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -26,6 +27,10 @@ func init() {
 }
 
 func main() {
+	if cli.IsInvocation(os.Args[1:]) {
+		os.Exit(cli.Run(os.Args[1:], os.Stdout, os.Stderr))
+	}
+
 	databasePath, err := repository.DefaultDatabasePath()
 	if err != nil {
 		log.Fatal(err)

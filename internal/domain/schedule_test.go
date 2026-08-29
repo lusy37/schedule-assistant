@@ -55,6 +55,26 @@ func TestNormaliseAndValidateRejectsCrossDayRange(t *testing.T) {
 	}
 }
 
+func TestNormaliseAndValidateRejectsOutsideBusinessHours(t *testing.T) {
+	for _, testCase := range []struct {
+		name  string
+		start time.Time
+		end   time.Time
+	}{
+		{name: "开始时间过早", start: time.Date(2026, time.August, 28, 7, 55, 0, 0, time.Local), end: time.Date(2026, time.August, 28, 9, 0, 0, 0, time.Local)},
+		{name: "结束时间过晚", start: time.Date(2026, time.August, 28, 20, 0, 0, 0, time.Local), end: time.Date(2026, time.August, 28, 21, 5, 0, 0, time.Local)},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			input := validInput()
+			input.StartAt = testCase.start.Format(time.RFC3339)
+			input.EndAt = testCase.end.Format(time.RFC3339)
+			if _, err := input.NormaliseAndValidate(); err == nil || !strings.Contains(err.Error(), "08:00 至 21:00") {
+				t.Fatalf("越界时间应返回明确错误，实际为: %v", err)
+			}
+		})
+	}
+}
+
 func TestNormaliseAndValidateRejectsLargeReminder(t *testing.T) {
 	input := validInput()
 	input.ReminderOffsets = []int{31 * 24 * 60}

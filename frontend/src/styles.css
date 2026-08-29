@@ -42,8 +42,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .mini-calendar__header { height: 28px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .mini-calendar__header strong { font-size: 14px; }
 .mini-calendar__nav { display: flex; gap: 2px; }
-.mini-calendar__nav button, .picker-popover__header button { width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; color: #6b7280; background: transparent; border-radius: 5px; }
-.mini-calendar__nav button:hover, .picker-popover__header button:hover { background: #e4e8ee; color: #1f2937; }
+.mini-calendar__nav button { width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; color: #6b7280; background: transparent; border-radius: 5px; }
+.mini-calendar__nav button:hover { background: #e4e8ee; color: #1f2937; }
 .mini-calendar__weekdays, .mini-calendar__grid { display: grid; grid-template-columns: repeat(7, 1fr); }
 .mini-calendar__weekdays span { text-align: center; font-size: 10px; line-height: 24px; color: #8a93a2; }
 .mini-calendar__day { position: relative; width: 28px; height: 28px; justify-self: center; display: inline-flex; align-items: center; justify-content: center; color: #3e4755; background: transparent; border-radius: 50%; font-size: 11px; }
@@ -140,22 +140,19 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .dialog-header h2 { overflow: hidden; max-width: 550px; margin: 0; color: #172033; font-size: 18px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
 .dialog-body { min-height: 0; overflow: visible; display: flex; flex-direction: column; gap: 16px; padding: 20px 24px 22px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.form-field, .date-time-field, .schedule-date-field, .schedule-time-field, .reminder-field { position: relative; display: flex; flex-direction: column; gap: 7px; min-width: 0; }
-.form-field label, .date-time-field > label, .schedule-date-time-fields__label, .reminder-field > label, .colour-field legend { color: #5f6978; font-size: 11px; font-weight: 650; }
-.form-field input, .form-field textarea, .input-with-icon, .date-time-field__button, .reminder-field__button { width: 100%; color: #242d3d; background: #fff; border: 1px solid #d8dee7; border-radius: 6px; }
-.form-field input, .input-with-icon, .date-time-field__button, .reminder-field__button { height: 40px; }
+.form-field, .schedule-date-field, .schedule-time-field, .reminder-field { position: relative; display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.form-field label, .schedule-date-time-fields__label, .reminder-field > label, .colour-field legend { color: #5f6978; font-size: 11px; font-weight: 650; }
+.form-field input, .form-field textarea, .input-with-icon, .reminder-field__button { width: 100%; color: #242d3d; background: #fff; border: 1px solid #d8dee7; border-radius: 6px; }
+.form-field input, .input-with-icon, .reminder-field__button { height: 40px; }
 .form-field input, .form-field textarea { padding: 9px 11px; outline: 0; }
 .form-field--title input { height: 44px; font-size: 14px; font-weight: 600; }
-.form-field input:focus, .form-field textarea:focus, .input-with-icon:focus-within, .date-time-field__button:focus-visible, .reminder-field__button:focus-visible { border-color: #7ba2f4; box-shadow: 0 0 0 3px rgba(37, 99, 235, .09); }
+.form-field input:focus, .form-field textarea:focus, .input-with-icon:focus-within, .reminder-field__button:focus-visible { border-color: #7ba2f4; box-shadow: 0 0 0 3px rgba(37, 99, 235, .09); }
 .form-field textarea { min-height: 70px; resize: vertical; }
 .form-field input::placeholder, .form-field textarea::placeholder, .custom-reminder input::placeholder { color: #abb2bd; }
 .input-with-icon { display: flex; align-items: center; padding: 0 10px; color: #8d96a4; }
 .input-with-icon input { height: 38px; min-width: 0; padding-left: 8px; border: 0; box-shadow: none; font-size: 12px; }
 .input-with-icon input:focus { box-shadow: none; }
-.date-time-field__button, .reminder-field__button { display: flex; align-items: center; gap: 8px; padding: 0 11px; text-align: left; }
-.date-time-field__button { color: #667080; }
-.date-time-field__button span { flex: 1; font-size: 12px; }
-.date-time-field__button strong { color: #1f2937; font-size: 12px; }
+.reminder-field__button { display: flex; align-items: center; gap: 8px; padding: 0 11px; text-align: left; }
 .schedule-date-time-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .schedule-date-picker.ant-picker { width: 100%; height: 40px; padding: 0 11px; color: #242d3d; background: #fff; border-color: #d8dee7; border-radius: 6px; box-shadow: none; }
 .schedule-date-picker.ant-picker:hover, .schedule-time-range-control:hover { border-color: #9eb9ee; }
@@ -181,20 +178,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .reminder-field__tag { min-height: 22px; display: inline-flex; align-items: center; padding: 2px 7px; color: #475569; background: #eef2f7; border-radius: 5px; font-size: 10px; line-height: 18px; }
 .reminder-field__placeholder { color: #242d3d; font-size: 12px; }
 
-.picker-popover, .reminder-menu { position: absolute; z-index: 40; top: calc(100% + 7px); left: 0; background: #fff; border: 1px solid #d8dee7; border-radius: 7px; box-shadow: 0 13px 30px rgba(15, 23, 42, .17); }
-.picker-popover { width: 278px; padding: 13px; }
-.picker-popover__header { height: 28px; display: flex; align-items: center; justify-content: space-between; }
-.picker-popover__header strong { font-size: 12px; }
-.picker-popover__header > div { display: flex; }
-.picker-weekdays, .picker-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-.picker-weekdays { margin-top: 6px; }
-.picker-weekdays span { text-align: center; color: #8b94a2; font-size: 9px; line-height: 25px; }
-.picker-grid button { width: 31px; height: 29px; justify-self: center; color: #364152; background: transparent; border-radius: 5px; font-size: 10px; }
-.picker-grid button:hover { background: #eef1f5; }
-.picker-grid button.is-outside { color: #c1c6ce; }
-.picker-grid button.is-selected { color: #fff; background: var(--blue); font-weight: 700; }
-.picker-time { height: 42px; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; padding: 6px; color: #7b8491; background: #f5f7fa; border-radius: 6px; }
-.picker-time input { width: 48px; height: 28px; padding: 3px 5px; text-align: center; background: #fff; border: 1px solid #d7dde6; border-radius: 5px; font-size: 11px; }
+.reminder-menu { position: absolute; z-index: 40; top: calc(100% + 7px); left: 0; background: #fff; border: 1px solid #d8dee7; border-radius: 7px; box-shadow: 0 13px 30px rgba(15, 23, 42, .17); }
 .reminder-menu { width: 100%; min-width: 210px; padding: 6px; }
 .reminder-menu > button { width: 100%; height: 32px; display: flex; align-items: center; justify-content: space-between; padding: 0 9px; color: #3b4656; background: transparent; border-radius: 5px; font-size: 11px; }
 .reminder-menu > button:hover { background: #f0f3f7; }
@@ -256,11 +240,4 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   .dialog-body { gap: 11px; padding-top: 14px; padding-bottom: 14px; }
   .dialog-body { overflow: auto; }
   .schedule-dialog { max-height: calc(100vh - 28px); }
-  .picker-popover { padding: 9px; }
-  .picker-popover__header { height: 24px; }
-  .picker-weekdays { margin-top: 2px; }
-  .picker-weekdays span { line-height: 18px; }
-  .picker-grid button { width: 27px; height: 23px; }
-  .picker-time { height: 34px; margin-top: 4px; padding: 4px; }
-  .picker-time input { height: 24px; }
 }

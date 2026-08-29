@@ -11,6 +11,7 @@
 - 系统通知、通知点击回到日程、系统唤醒后补充扫描
 - 单实例、关闭到系统托盘、托盘快捷新建
 - 可选开机后台启动
+- 面向 Codex、Claude Code 和脚本自动化的 JSON CLI
 - 浏览器开发预览使用 `localStorage` 降级，无需启动桌面壳即可调试页面
 
 ## 技术架构
@@ -20,8 +21,9 @@
 | 桌面容器 | Wails 3 Beta | 窗口、托盘、通知、开机启动、打包 |
 | 后端 | Go 1.25 | 业务校验、提醒调度、前端绑定服务 |
 | 数据 | SQLite（modernc 纯 Go 驱动） | 日程与提醒发送记录持久化 |
+| AI 接口 | `scheduleassistant.exe schedule ...` | 通过稳定 JSON 契约创建和查询日程 |
 | 前端 | React 18、TypeScript、Vite | 日历、日程表单和设置界面 |
-| 测试 | Go test、Vitest | 领域、仓储和日期布局逻辑 |
+| 测试 | Go test、Vitest、Playwright | 领域、仓储、前端组件和完整业务 UAT |
 
 ## 本地开发
 
@@ -55,6 +57,21 @@ Windows 生产可执行文件生成在 `bin/scheduleassistant.exe`。安装包�
 ```powershell
 wails3 package
 ```
+
+同一个 `scheduleassistant.exe` 同时提供 GUI 和 CLI：无参数启动桌面界面，带 `schedule` 命令时不创建窗口并直接返回 JSON。AI 或自动化脚本可以写入桌面版使用的同一个 SQLite 数据库：
+
+```powershell
+bin\scheduleassistant.exe schedule create `
+  --title "设计评审" `
+  --date 2026-08-30 `
+  --start 09:00 `
+  --end 10:00 `
+  --reminders 15,30
+
+bin\scheduleassistant.exe schedule list --date 2026-08-30
+```
+
+CLI 默认输出适合 AI 解析的 JSON，完整参数、错误契约和 Skill/MCP 接入方式见 [AI 集成指南](./docs/AI_CLI.md)。
 
 ## 数据位置
 
