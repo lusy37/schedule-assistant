@@ -25,6 +25,22 @@
 | 前端 | React 18、TypeScript、Vite | 日历、日程表单和设置界面 |
 | 测试 | Go test、Vitest、Playwright | 领域、仓储、前端组件和完整业务 UAT |
 
+## 项目结构
+
+```text
+.
+├─ main.go                     # GUI/CLI 进程入口与 Wails 组装
+├─ schedule_service.go         # 暴露给前端的 Wails 适配层
+├─ internal/                   # CLI、领域模型、提醒调度和数据仓储
+├─ frontend/                   # React 前端、绑定、单测和浏览器 UAT
+├─ build/                      # Wails 各平台构建与打包配置
+├─ docs/prototypes/            # 初始界面原型图
+├─ skills/schedule-assistant/  # 可分发的 Codex Skill
+└─ scripts/                    # 项目安装和维护脚本
+```
+
+根目录的 Go 文件只负责可执行程序组装和 Wails 桥接；可独立测试的业务逻辑均位于 `internal`。这是兼容 Wails 根包构建方式的有意安排，不是将后端实现平铺在根目录。
+
 ## 本地开发
 
 环境要求：Go 1.25、Node.js 22、Wails 3 Beta.15。Windows 还需要 WebView2 Runtime。
@@ -73,8 +89,25 @@ bin\scheduleassistant.exe schedule list --date 2026-08-30
 
 CLI 默认输出适合 AI 解析的 JSON，完整参数、错误契约和 Skill/MCP 接入方式见 [AI 集成指南](./docs/AI_CLI.md)。
 
+仓库内已提供 Codex Skill。本地克隆后可执行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-codex-skill.ps1
+```
+
+仓库公开发布后，未克隆仓库的用户可以先下载并检查安装脚本，再执行：
+
+```powershell
+$skillInstaller = Join-Path $env:TEMP 'install-schedule-assistant-skill.ps1'
+Invoke-WebRequest 'https://raw.githubusercontent.com/lusy37/schedule-assistant/main/scripts/install-codex-skill.ps1' -OutFile $skillInstaller
+powershell -ExecutionPolicy Bypass -File $skillInstaller
+Remove-Item -LiteralPath $skillInstaller
+```
+
+该脚本只安装 `SKILL.md` 和 Codex 界面元数据，不下载第二个 EXE。Skill 仍调用桌面版自带的同一个 `scheduleassistant.exe`。
+
 ## 数据位置
 
 桌面版数据库位于当前用户配置目录的 `ScheduleAssistant/schedule-assistant.db`。数据库启用 WAL、外键约束和忙等待，提醒发送记录用于避免同一提醒重复通知。
 
-项目范围与后续迭代计划见 [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)。
+项目范围与后续迭代计划见 [实施计划](./docs/IMPLEMENTATION_PLAN.md)，初始界面原型归档在 [docs/prototypes](./docs/prototypes)。

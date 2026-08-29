@@ -2,7 +2,7 @@
 
 ## 1. 项目目标
 
-根据 `main-window.png`、`add-task-dialog.png` 和 `presentation-canvas.png` 实现一款本地优先的桌面日程待办提醒软件。首版重点是还原原型中的日历、日/周视图、日程维护和系统提醒，并保证数据在应用重启后仍然保留。
+根据 `prototypes/main-window.png`、`prototypes/add-task-dialog.png` 和 `prototypes/presentation-canvas.png` 实现一款本地优先的桌面日程待办提醒软件。首版重点是还原原型中的日历、日/周视图、日程维护和系统提醒，并保证数据在应用重启后仍然保留。
 
 ## 2. 实施假设与范围
 

@@ -1,4 +1,4 @@
-package main
+package reminder
 
 import (
 	"context"
@@ -27,7 +27,8 @@ type dueReminder struct {
 	triggerAt time.Time
 }
 
-type ReminderScheduler struct {
+// Scheduler 负责扫描到期提醒，并将同一日程的多个逾期提醒合并发送。
+type Scheduler struct {
 	store         reminderStore
 	notifications notificationSender
 	wake          chan struct{}
@@ -35,8 +36,8 @@ type ReminderScheduler struct {
 	stopOnce      sync.Once
 }
 
-func NewReminderScheduler(store reminderStore, notificationService notificationSender) *ReminderScheduler {
-	return &ReminderScheduler{
+func New(store reminderStore, notificationService notificationSender) *Scheduler {
+	return &Scheduler{
 		store:         store,
 		notifications: notificationService,
 		wake:          make(chan struct{}, 1),
@@ -44,7 +45,7 @@ func NewReminderScheduler(store reminderStore, notificationService notificationS
 	}
 }
 
-func (scheduler *ReminderScheduler) Start() {
+func (scheduler *Scheduler) Start() {
 	go func() {
 		ticker := time.NewTicker(15 * time.Second)
 		defer ticker.Stop()
@@ -63,20 +64,20 @@ func (scheduler *ReminderScheduler) Start() {
 	}()
 }
 
-func (scheduler *ReminderScheduler) Wake() {
+func (scheduler *Scheduler) Wake() {
 	select {
 	case scheduler.wake <- struct{}{}:
 	default:
 	}
 }
 
-func (scheduler *ReminderScheduler) Stop() {
+func (scheduler *Scheduler) Stop() {
 	scheduler.stopOnce.Do(func() {
 		close(scheduler.stop)
 	})
 }
 
-func (scheduler *ReminderScheduler) scan(now time.Time) {
+func (scheduler *Scheduler) scan(now time.Time) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -145,7 +146,7 @@ func (scheduler *ReminderScheduler) scan(now time.Time) {
 	}
 }
 
-func (scheduler *ReminderScheduler) deliver(item domain.Schedule, offset int, startAt time.Time, mergedCount int) error {
+func (scheduler *Scheduler) deliver(item domain.Schedule, offset int, startAt time.Time, mergedCount int) error {
 	body := fmt.Sprintf("%s 开始", startAt.Local().Format("15:04"))
 	if item.Location != "" {
 		body += " · " + item.Location

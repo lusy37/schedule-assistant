@@ -71,22 +71,9 @@ AI 应根据 `resolution` 修正参数后重试，不应直接修改 SQLite。
 
 ## Codex 或 Claude Code Skill
 
-Skill 只负责将用户自然语言转换为确定性 CLI 参数。推荐规则如下：
+仓库内的 [`skills/schedule-assistant/SKILL.md`](../skills/schedule-assistant/SKILL.md) 是 Skill 的唯一规则来源，负责将自然语言转换为确定性 CLI 参数、处理 JSON 和在创建后核验结果。它不会直接操作 SQLite。
 
-```markdown
----
-name: schedule-assistant
-description: 当用户要求创建或查询本机日程、待办或提醒时使用。
----
-
-1. 将相对日期解析为本机时区的 YYYY-MM-DD；日期存在歧义时先询问用户。
-2. 创建时调用：scheduleassistant.exe schedule create。
-3. 时间使用 HH:mm，提醒使用开始前分钟数，例如 15,30。
-4. 读取 JSON；ok=false 时按照 error.resolution 修正一次，仍失败则向用户报告。
-5. 创建成功后使用 schedule list --date YYYY-MM-DD 核验，并向用户确认标题、日期、时间和提醒。
-```
-
-Codex 和 Claude Code 都可以直接执行该 CLI，因此第一版不需要分别维护两套插件。
+Codex 用户可运行 [`scripts/install-codex-skill.ps1`](../scripts/install-codex-skill.ps1) 安装到 `$CODEX_HOME/skills` 或默认的用户 Skill 目录。安装脚本只复制 Skill 文件，不下载第二个 EXE。其他支持 Markdown Skill 的 agent 可以复用同一目录，不需要复制业务规则或维护独立插件。
 
 ## MCP 或插件封装
 

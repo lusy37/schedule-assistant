@@ -1,4 +1,4 @@
-package main
+package reminder
 
 import (
 	"context"
@@ -59,7 +59,7 @@ func TestReminderSchedulerCatchesUpUntilScheduleEnds(t *testing.T) {
 	sender := &recordingNotificationSender{}
 	now := time.Date(2026, time.August, 28, 10, 0, 0, 0, time.UTC)
 	item := saveReminderTestSchedule(t, store, now.Add(10*time.Minute), now.Add(70*time.Minute), []int{60})
-	scheduler := NewReminderScheduler(store, sender)
+	scheduler := New(store, sender)
 
 	scheduler.scan(now)
 	if len(sender.items) != 1 {
@@ -84,7 +84,7 @@ func TestReminderSchedulerSkipsEndedAndFutureSchedules(t *testing.T) {
 	saveReminderTestSchedule(t, store, now.Add(-time.Hour), now.Add(-time.Minute), []int{15})
 	saveReminderTestSchedule(t, store, now.Add(time.Hour), now.Add(2*time.Hour), []int{15})
 
-	NewReminderScheduler(store, sender).scan(now)
+	New(store, sender).scan(now)
 	if len(sender.items) != 0 {
 		t.Fatalf("已结束或尚未到触发时间的日程不应发送提醒: count=%d", len(sender.items))
 	}
@@ -96,7 +96,7 @@ func TestReminderSchedulerRestartUATMergesAllOverdueReminders(t *testing.T) {
 	startAt := time.Date(2026, time.August, 28, 10, 0, 0, 0, time.UTC)
 	now := startAt.Add(-2 * time.Minute)
 	item := saveReminderTestSchedule(t, store, startAt, startAt.Add(time.Hour), []int{60, 30, 5})
-	scheduler := NewReminderScheduler(store, sender)
+	scheduler := New(store, sender)
 
 	scheduler.scan(now)
 	if len(sender.items) != 1 {
@@ -127,7 +127,7 @@ func TestReminderSchedulerKeepsFutureReminderAfterMerge(t *testing.T) {
 	sender := &recordingNotificationSender{}
 	startAt := time.Date(2026, time.August, 28, 10, 0, 0, 0, time.UTC)
 	item := saveReminderTestSchedule(t, store, startAt, startAt.Add(time.Hour), []int{60, 30, 5})
-	scheduler := NewReminderScheduler(store, sender)
+	scheduler := New(store, sender)
 
 	scheduler.scan(startAt.Add(-10 * time.Minute))
 	if len(sender.items) != 1 || !strings.HasSuffix(sender.items[0].ID, "-30") {
@@ -155,7 +155,7 @@ func TestReminderSchedulerRetriesWholeMergeAfterDeliveryFailure(t *testing.T) {
 	sender := &recordingNotificationSender{err: errors.New("模拟系统通知失败")}
 	startAt := time.Date(2026, time.August, 28, 10, 0, 0, 0, time.UTC)
 	item := saveReminderTestSchedule(t, store, startAt, startAt.Add(time.Hour), []int{60, 30, 5})
-	scheduler := NewReminderScheduler(store, sender)
+	scheduler := New(store, sender)
 
 	scheduler.scan(startAt.Add(-2 * time.Minute))
 	if sender.attempts != 1 || len(sender.items) != 0 {

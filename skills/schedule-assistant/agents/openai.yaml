@@ -1,0 +1,4 @@
+interface:
+  display_name: "日程助手"
+  short_description: "通过本机日程助手 CLI 安全地创建、查询并核验日程与提醒"
+  default_prompt: "使用 $schedule-assistant 帮我创建一个本机日程并设置提醒。"

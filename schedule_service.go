@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"schedule-assistant/internal/domain"
+	"schedule-assistant/internal/reminder"
 	"schedule-assistant/internal/repository"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -22,7 +23,7 @@ type ScheduleService struct {
 	store         *repository.Store
 	databasePath  string
 	notifications *notifications.NotificationService
-	scheduler     *ReminderScheduler
+	scheduler     *reminder.Scheduler
 	app           *application.App
 	window        *application.WebviewWindow
 }
@@ -32,7 +33,7 @@ func NewScheduleService(store *repository.Store, databasePath string, notificati
 		store:         store,
 		databasePath:  databasePath,
 		notifications: notificationService,
-		scheduler:     NewReminderScheduler(store, notificationService),
+		scheduler:     reminder.New(store, notificationService),
 	}
 }
 
