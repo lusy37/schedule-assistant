@@ -10,11 +10,18 @@ import { ScheduleDialog } from './components/ScheduleDialog'
 import { SettingsDialog } from './components/SettingsDialog'
 import { TitleBar } from './components/TitleBar'
 import { WeekView } from './components/WeekView'
-import { roundToNextHalfHour } from './lib/calendar'
+import { DAY_END_HOUR, DAY_START_HOUR, roundToNextHalfHour } from './lib/calendar'
 import type { CalendarView, Schedule, ScheduleInput } from './types'
 
 function initialStartFor(date: Date) {
-  if (isSameDay(date, new Date())) return roundToNextHalfHour(new Date())
+  if (isSameDay(date, new Date())) {
+    const rounded = roundToNextHalfHour(new Date())
+    const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), DAY_START_HOUR)
+    const latestStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), DAY_END_HOUR - 1)
+    if (rounded < dayStart) return dayStart
+    if (rounded > latestStart) return latestStart
+    return rounded
+  }
   return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 9, 0)
 }
 
@@ -23,6 +30,7 @@ function App() {
   const [selectedDate, setSelectedDate] = useState(() => new Date())
   const [view, setView] = useState<CalendarView>('day')
   const [dialogSchedule, setDialogSchedule] = useState<Schedule | null>(null)
+  const [dialogDateEditable, setDialogDateEditable] = useState(true)
   const [dialogStart, setDialogStart] = useState<Date | null>(() => (
     import.meta.env.DEV && ['new', 'picker', 'reminder'].includes(new URLSearchParams(window.location.search).get('preview') ?? '')
       ? initialStartFor(new Date())
@@ -47,10 +55,16 @@ function App() {
   useEffect(() => {
     if (!isDesktopRuntime()) return
     const unsubscribeChanged = Events.On('schedule:changed', () => void loadSchedules())
-    const unsubscribeCreate = Events.On('schedule:create', () => setDialogStart(initialStartFor(selectedDate)))
+    const unsubscribeCreate = Events.On('schedule:create', () => {
+      setDialogDateEditable(true)
+      setDialogStart(initialStartFor(selectedDate))
+    })
     const unsubscribeOpen = Events.On('schedule:open', (event) => {
       const schedule = schedules.find((item) => item.id === event.data)
-      if (schedule) setDialogSchedule(schedule)
+      if (schedule) {
+        setDialogDateEditable(true)
+        setDialogSchedule(schedule)
+      }
     })
     return () => { unsubscribeChanged(); unsubscribeCreate(); unsubscribeOpen() }
   }, [loadSchedules, schedules, selectedDate])
@@ -72,8 +86,9 @@ function App() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  const openCreate = (start = initialStartFor(selectedDate)) => {
+  const openCreate = (start = initialStartFor(selectedDate), dateEditable = true) => {
     setDialogSchedule(null)
+    setDialogDateEditable(dateEditable)
     setDialogStart(start)
   }
 
@@ -125,7 +140,7 @@ function App() {
           schedules={schedules}
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
-          onOpenSchedule={(schedule) => { setDialogStart(null); setDialogSchedule(schedule) }}
+          onOpenSchedule={(schedule) => { setDialogStart(null); setDialogDateEditable(true); setDialogSchedule(schedule) }}
           onToggleComplete={(schedule) => void toggleComplete(schedule)}
         />
         <main className="calendar-main">
@@ -146,9 +161,19 @@ function App() {
             {loading ? (
               <div className="loading-state"><span /><p>正在读取日程</p></div>
             ) : view === 'day' ? (
-              <DayView date={selectedDate} schedules={schedules} onOpenSchedule={(schedule) => setDialogSchedule(schedule)} onCreateAt={openCreate} />
+              <DayView
+                date={selectedDate}
+                schedules={schedules}
+                onOpenSchedule={(schedule) => { setDialogDateEditable(true); setDialogSchedule(schedule) }}
+                onCreateAt={(start) => openCreate(start, false)}
+              />
             ) : (
-              <WeekView date={selectedDate} schedules={schedules} onSelectDate={(date) => { setSelectedDate(date); setView('day') }} onOpenSchedule={setDialogSchedule} />
+              <WeekView
+                date={selectedDate}
+                schedules={schedules}
+                onSelectDate={(date) => { setSelectedDate(date); setView('day') }}
+                onOpenSchedule={(schedule) => { setDialogDateEditable(true); setDialogSchedule(schedule) }}
+              />
             )}
           </div>
           <button className="create-button" onClick={() => openCreate()} title="新建日程" aria-label="新建日程"><Plus size={24} /></button>
@@ -157,12 +182,14 @@ function App() {
 
       {(dialogStart || dialogSchedule) && (
         <ScheduleDialog
+          key={dialogSchedule?.id ?? dialogStart?.toISOString()}
           schedule={dialogSchedule}
           initialStart={dialogStart ?? new Date(dialogSchedule!.startAt)}
           onClose={closeDialog}
           onSave={saveSchedule}
           onDelete={deleteSchedule}
           onToggleComplete={toggleComplete}
+          dateEditable={dialogSchedule !== null || dialogDateEditable}
         />
       )}
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} onNotify={setToast} />}

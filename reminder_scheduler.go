@@ -8,20 +8,34 @@ import (
 	"time"
 
 	"schedule-assistant/internal/domain"
-	"schedule-assistant/internal/repository"
 
 	"github.com/wailsapp/wails/v3/pkg/services/notifications"
 )
 
+type reminderStore interface {
+	ListSchedules(context.Context) ([]domain.Schedule, error)
+	WasReminderDelivered(context.Context, string, int, time.Time) (bool, error)
+	MarkRemindersDelivered(context.Context, string, map[int]time.Time) error
+}
+
+type notificationSender interface {
+	SendNotification(notifications.NotificationOptions) error
+}
+
+type dueReminder struct {
+	offset    int
+	triggerAt time.Time
+}
+
 type ReminderScheduler struct {
-	store         *repository.Store
-	notifications *notifications.NotificationService
+	store         reminderStore
+	notifications notificationSender
 	wake          chan struct{}
 	stop          chan struct{}
 	stopOnce      sync.Once
 }
 
-func NewReminderScheduler(store *repository.Store, notificationService *notifications.NotificationService) *ReminderScheduler {
+func NewReminderScheduler(store reminderStore, notificationService notificationSender) *ReminderScheduler {
 	return &ReminderScheduler{
 		store:         store,
 		notifications: notificationService,
@@ -80,35 +94,64 @@ func (scheduler *ReminderScheduler) scan(now time.Time) {
 			log.Printf("跳过时间格式无效的日程 %s: %v", item.ID, err)
 			continue
 		}
+		endAt, err := time.Parse(time.RFC3339Nano, item.EndAt)
+		if err != nil {
+			log.Printf("跳过结束时间格式无效的日程 %s: %v", item.ID, err)
+			continue
+		}
+		if !now.Before(endAt) {
+			continue
+		}
+		due := make([]dueReminder, 0, len(item.ReminderOffsets))
+		failedToReadDelivery := false
 		for _, offset := range item.ReminderOffsets {
 			triggerAt := startAt.Add(-time.Duration(offset) * time.Minute)
-			lateness := now.Sub(triggerAt)
-			if lateness < 0 || lateness > 5*time.Minute {
+			if now.Before(triggerAt) {
 				continue
 			}
 			delivered, err := scheduler.store.WasReminderDelivered(ctx, item.ID, offset, triggerAt)
 			if err != nil {
 				log.Printf("读取提醒发送状态失败: %v", err)
-				continue
+				failedToReadDelivery = true
+				break
 			}
 			if delivered {
 				continue
 			}
-			if err := scheduler.deliver(item, offset, startAt); err != nil {
-				log.Printf("发送提醒失败: %v", err)
-				continue
+			due = append(due, dueReminder{offset: offset, triggerAt: triggerAt})
+		}
+		if failedToReadDelivery || len(due) == 0 {
+			continue
+		}
+
+		latest := due[0]
+		for _, candidate := range due[1:] {
+			if candidate.triggerAt.After(latest.triggerAt) {
+				latest = candidate
 			}
-			if err := scheduler.store.MarkReminderDelivered(ctx, item.ID, offset, triggerAt); err != nil {
-				log.Printf("记录提醒状态失败: %v", err)
-			}
+		}
+		if err := scheduler.deliver(item, latest.offset, startAt, len(due)); err != nil {
+			log.Printf("发送提醒失败: %v", err)
+			continue
+		}
+
+		deliveries := make(map[int]time.Time, len(due))
+		for _, reminder := range due {
+			deliveries[reminder.offset] = reminder.triggerAt
+		}
+		if err := scheduler.store.MarkRemindersDelivered(ctx, item.ID, deliveries); err != nil {
+			log.Printf("记录合并提醒状态失败: %v", err)
 		}
 	}
 }
 
-func (scheduler *ReminderScheduler) deliver(item domain.Schedule, offset int, startAt time.Time) error {
+func (scheduler *ReminderScheduler) deliver(item domain.Schedule, offset int, startAt time.Time, mergedCount int) error {
 	body := fmt.Sprintf("%s 开始", startAt.Local().Format("15:04"))
 	if item.Location != "" {
 		body += " · " + item.Location
+	}
+	if mergedCount > 1 {
+		body += fmt.Sprintf(" · 已合并 %d 个提醒", mergedCount)
 	}
 	return scheduler.notifications.SendNotification(notifications.NotificationOptions{
 		ID:    fmt.Sprintf("schedule-%s-%d", item.ID, offset),

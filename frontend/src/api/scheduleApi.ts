@@ -123,12 +123,18 @@ export const scheduleApi = {
   },
 
   async testNotification(): Promise<void> {
-    if (isDesktopRuntime()) await ScheduleService.SendTestNotification()
-    else if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('日程助手通知测试', { body: '系统通知工作正常。' })
-    } else if ('Notification' in window) {
-      await Notification.requestPermission()
+    if (isDesktopRuntime()) {
+      await ScheduleService.SendTestNotification()
+      return
     }
+    if (!('Notification' in window)) throw new Error('当前浏览器不支持系统通知')
+
+    const permission = Notification.permission === 'default'
+      ? await Notification.requestPermission()
+      : Notification.permission
+    if (permission !== 'granted') throw new Error('通知权限未授权，请在系统或浏览器设置中开启')
+
+    new Notification('日程助手通知测试', { body: '系统通知工作正常。' })
   },
 
   minimise: () => isDesktopRuntime() && ScheduleService.MinimiseWindow(),

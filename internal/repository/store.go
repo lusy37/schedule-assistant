@@ -226,9 +226,6 @@ func (s *Store) SaveSchedule(ctx context.Context, raw domain.ScheduleInput) (dom
 	if err != nil {
 		return domain.Schedule{}, fmt.Errorf("保存日程失败: %w", err)
 	}
-	if _, err := tx.ExecContext(ctx, `DELETE FROM reminder_deliveries WHERE schedule_id = ?`, input.ID); err != nil {
-		return domain.Schedule{}, fmt.Errorf("重置提醒状态失败: %w", err)
-	}
 	if err := tx.Commit(); err != nil {
 		return domain.Schedule{}, fmt.Errorf("提交日程失败: %w", err)
 	}
@@ -282,17 +279,36 @@ func (s *Store) WasReminderDelivered(ctx context.Context, scheduleID string, off
 }
 
 func (s *Store) MarkReminderDelivered(ctx context.Context, scheduleID string, offsetMinutes int, triggerAt time.Time) error {
-	_, err := s.db.ExecContext(ctx, `
-		INSERT OR IGNORE INTO reminder_deliveries (
-			schedule_id, offset_minutes, trigger_at, delivered_at
-		) VALUES (?, ?, ?, ?)`,
-		scheduleID,
-		offsetMinutes,
-		triggerAt.UTC().Format(time.RFC3339Nano),
-		time.Now().UTC().Format(time.RFC3339Nano),
-	)
+	return s.MarkRemindersDelivered(ctx, scheduleID, map[int]time.Time{offsetMinutes: triggerAt})
+}
+
+// MarkRemindersDelivered 在同一事务中记录一次合并通知处理的所有提醒。
+func (s *Store) MarkRemindersDelivered(ctx context.Context, scheduleID string, reminders map[int]time.Time) error {
+	if len(reminders) == 0 {
+		return nil
+	}
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("记录提醒发送状态失败: %w", err)
+		return fmt.Errorf("开始记录提醒发送状态失败: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	deliveredAt := time.Now().UTC().Format(time.RFC3339Nano)
+	for offsetMinutes, triggerAt := range reminders {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT OR IGNORE INTO reminder_deliveries (
+				schedule_id, offset_minutes, trigger_at, delivered_at
+			) VALUES (?, ?, ?, ?)`,
+			scheduleID,
+			offsetMinutes,
+			triggerAt.UTC().Format(time.RFC3339Nano),
+			deliveredAt,
+		); err != nil {
+			return fmt.Errorf("记录提醒发送状态失败: %w", err)
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("提交提醒发送状态失败: %w", err)
 	}
 	return nil
 }

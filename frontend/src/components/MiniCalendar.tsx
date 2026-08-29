@@ -16,10 +16,8 @@ export function MiniCalendar({ selectedDate, markedDays, onSelect }: MiniCalenda
   const days = useMemo(() => monthGrid(month), [month])
 
   useEffect(() => {
-    if (!isSameMonth(month, selectedDate)) {
-      setMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1))
-    }
-  }, [month, selectedDate])
+    setMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1))
+  }, [selectedDate])
 
   return (
     <section className="mini-calendar" aria-label="日期选择">

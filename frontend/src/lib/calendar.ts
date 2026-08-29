@@ -13,7 +13,7 @@ import { zhCN } from 'date-fns/locale'
 import type { Schedule } from '../types'
 
 export const DAY_START_HOUR = 8
-export const DAY_END_HOUR = 18
+export const DAY_END_HOUR = 21
 export const HOUR_HEIGHT = 61
 
 export function dateKey(date: Date): string {
@@ -89,6 +89,13 @@ export function roundToNextHalfHour(now: Date): Date {
   return result
 }
 
+export function currentTimeTop(day: Date, now: Date): number | null {
+  const dayStart = new Date(day.getFullYear(), day.getMonth(), day.getDate(), DAY_START_HOUR)
+  const dayEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate(), DAY_END_HOUR)
+  if (now < dayStart || now >= dayEnd) return null
+  return ((now.getTime() - dayStart.getTime()) / 3_600_000) * HOUR_HEIGHT
+}
+
 export interface PositionedSchedule {
   schedule: Schedule
   top: number
@@ -138,7 +145,7 @@ export function positionDaySchedules(schedules: Schedule[], day: Date): Position
       result.push({
         schedule: item.schedule,
         top: (startMinutes / 60) * HOUR_HEIGHT,
-        height: Math.max((durationMinutes / 60) * HOUR_HEIGHT, 44),
+        height: (durationMinutes / 60) * HOUR_HEIGHT,
         left: (item.column / columns) * 100,
         width: 100 / columns,
       })

@@ -21,6 +21,7 @@ var allowedColours = map[string]struct{}{
 	"#8b5cf6": {},
 	"#ef4444": {},
 	"#06b6d4": {},
+	"#64748b": {},
 }
 
 // Schedule 是前端与 Go 服务之间共享的日程实体。
@@ -63,14 +64,14 @@ func (input ScheduleInput) NormaliseAndValidate() (ScheduleInput, error) {
 	if input.Title == "" {
 		return input, errors.New("日程名称不能为空")
 	}
-	if len([]rune(input.Title)) > 80 {
-		return input, errors.New("日程名称不能超过 80 个字符")
+	if len([]rune(input.Title)) > 120 {
+		return input, errors.New("日程名称不能超过 120 个字符")
 	}
-	if len([]rune(input.Location)) > 120 {
-		return input, errors.New("地点不能超过 120 个字符")
+	if len([]rune(input.Location)) > 200 {
+		return input, errors.New("地点不能超过 200 个字符")
 	}
-	if len([]rune(input.Notes)) > 1000 {
-		return input, errors.New("备注不能超过 1000 个字符")
+	if len([]rune(input.Notes)) > 4000 {
+		return input, errors.New("备注不能超过 4000 个字符")
 	}
 
 	startAt, err := time.Parse(time.RFC3339Nano, input.StartAt)
@@ -84,8 +85,12 @@ func (input ScheduleInput) NormaliseAndValidate() (ScheduleInput, error) {
 	if !endAt.After(startAt) {
 		return input, errors.New("结束时间必须晚于开始时间")
 	}
-	if endAt.Sub(startAt) > 31*24*time.Hour {
-		return input, errors.New("单个日程不能超过 31 天")
+	startLocal := startAt.In(time.Local)
+	endLocal := endAt.In(time.Local)
+	startYear, startMonth, startDay := startLocal.Date()
+	endYear, endMonth, endDay := endLocal.Date()
+	if startYear != endYear || startMonth != endMonth || startDay != endDay {
+		return input, errors.New("日程不能跨天")
 	}
 
 	if _, ok := allowedColours[input.Colour]; !ok {

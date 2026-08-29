@@ -31,6 +31,8 @@ export function SettingsDialog({ onClose, onNotify }: SettingsDialogProps) {
     try {
       await scheduleApi.testNotification()
       onNotify('测试通知已发送')
+    } catch (reason) {
+      onNotify(reason instanceof Error ? reason.message : '测试通知发送失败')
     } finally {
       setBusy(false)
     }

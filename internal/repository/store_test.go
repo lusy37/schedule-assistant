@@ -54,6 +54,25 @@ func TestStoreScheduleLifecycle(t *testing.T) {
 		t.Fatalf("提醒去重状态读取失败: delivered=%v err=%v", delivered, err)
 	}
 
+	updated, err := store.SaveSchedule(context.Background(), domain.ScheduleInput{
+		ID:              created.ID,
+		Title:           "产品例会（已更新）",
+		StartAt:         created.StartAt,
+		EndAt:           created.EndAt,
+		Location:        created.Location,
+		Notes:           created.Notes,
+		Colour:          created.Colour,
+		ReminderOffsets: created.ReminderOffsets,
+		Status:          completed.Status,
+	})
+	if err != nil || updated.Title != "产品例会（已更新）" {
+		t.Fatalf("更新日程失败: item=%#v err=%v", updated, err)
+	}
+	delivered, err = store.WasReminderDelivered(context.Background(), created.ID, 15, triggerAt)
+	if err != nil || !delivered {
+		t.Fatalf("无关字段更新后不应清除提醒投递记录: delivered=%v err=%v", delivered, err)
+	}
+
 	if err := store.DeleteSchedule(context.Background(), created.ID); err != nil {
 		t.Fatalf("删除日程失败: %v", err)
 	}

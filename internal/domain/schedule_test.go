@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -44,10 +45,40 @@ func TestNormaliseAndValidateRejectsInvalidRange(t *testing.T) {
 	}
 }
 
+func TestNormaliseAndValidateRejectsCrossDayRange(t *testing.T) {
+	input := validInput()
+	start := time.Date(2026, time.August, 28, 23, 30, 0, 0, time.Local)
+	input.StartAt = start.Format(time.RFC3339)
+	input.EndAt = start.Add(time.Hour).Format(time.RFC3339)
+	if _, err := input.NormaliseAndValidate(); err == nil || !strings.Contains(err.Error(), "不能跨天") {
+		t.Fatalf("跨天日程应返回明确错误，实际为: %v", err)
+	}
+}
+
 func TestNormaliseAndValidateRejectsLargeReminder(t *testing.T) {
 	input := validInput()
 	input.ReminderOffsets = []int{31 * 24 * 60}
 	if _, err := input.NormaliseAndValidate(); err == nil {
 		t.Fatal("超过 30 天的提醒偏移应返回错误")
+	}
+}
+
+func TestNormaliseAndValidateMatchesFrontendLimits(t *testing.T) {
+	input := validInput()
+	input.Title = strings.Repeat("日", 120)
+	input.Location = strings.Repeat("地", 200)
+	input.Notes = strings.Repeat("注", 4000)
+	input.Colour = "#64748b"
+	result, err := input.NormaliseAndValidate()
+	if err != nil {
+		t.Fatalf("前端允许的字段边界应能通过后端校验: %v", err)
+	}
+	if result.Colour != "#64748b" {
+		t.Fatalf("前端颜色应被后端保留: %s", result.Colour)
+	}
+
+	input.Title += "日"
+	if _, err := input.NormaliseAndValidate(); err == nil {
+		t.Fatal("超过前端标题上限时应返回错误")
 	}
 }
