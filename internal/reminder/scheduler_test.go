@@ -31,7 +31,7 @@ func (sender *recordingNotificationSender) SendNotification(options notification
 
 func createReminderTestStore(t *testing.T) *repository.Store {
 	t.Helper()
-	store, err := repository.NewStore(filepath.Join(t.TempDir(), "reminders.db"), false)
+	store, err := repository.NewStore(filepath.Join(t.TempDir(), "reminders.db"))
 	if err != nil {
 		t.Fatalf("创建提醒测试数据库失败: %v", err)
 	}

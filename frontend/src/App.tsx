@@ -54,6 +54,20 @@ function App() {
 
   useEffect(() => {
     if (!isDesktopRuntime()) return
+    const refresh = () => void loadSchedules()
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+    }
+  }, [loadSchedules])
+
+  useEffect(() => {
+    if (!isDesktopRuntime()) return
     const unsubscribeChanged = Events.On('schedule:changed', () => void loadSchedules())
     const unsubscribeCreate = Events.On('schedule:create', () => {
       setDialogDateEditable(true)

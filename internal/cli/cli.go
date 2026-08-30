@@ -256,7 +256,7 @@ func openStore(path string) (*repository.Store, error) {
 			return nil, err
 		}
 	}
-	return repository.NewStore(path, false)
+	return repository.NewStore(path)
 }
 
 func scheduleStartsOn(item domain.Schedule, day time.Time) bool {

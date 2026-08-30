@@ -12,31 +12,6 @@ declare global {
 
 export const isDesktopRuntime = () => Boolean(window._wails?.environment?.OS)
 
-function createSeedSchedules(): Schedule[] {
-  const day = new Date()
-  const now = new Date().toISOString()
-  const seeds = [
-    ['每周跨部门例会', 9, 0, 10, 0, '会议室 A', '#3b82f6'],
-    ['设计稿评审', 11, 30, 12, 0, '在线会议', '#10b981'],
-    ['产品路线图规划会议', 14, 0, 15, 30, '会议室 B', '#f59e0b'],
-    ['同步下周预算', 16, 30, 17, 0, '办公室', '#8b5cf6'],
-  ] as const
-
-  return seeds.map(([title, startHour, startMinute, endHour, endMinute, location, color], index) => ({
-    id: `browser-demo-${index + 1}`,
-    title,
-    startAt: new Date(day.getFullYear(), day.getMonth(), day.getDate(), startHour, startMinute).toISOString(),
-    endAt: new Date(day.getFullYear(), day.getMonth(), day.getDate(), endHour, endMinute).toISOString(),
-    location,
-    notes: '',
-    color,
-    reminderOffsets: [15],
-    status: 'pending',
-    createdAt: now,
-    updatedAt: now,
-  }))
-}
-
 function readLocalSchedules(): Schedule[] {
   const value = localStorage.getItem(STORAGE_KEY)
   if (value) {
@@ -46,9 +21,7 @@ function readLocalSchedules(): Schedule[] {
       localStorage.removeItem(STORAGE_KEY)
     }
   }
-  const seeds = createSeedSchedules()
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(seeds))
-  return seeds
+  return []
 }
 
 function writeLocalSchedules(schedules: Schedule[]) {

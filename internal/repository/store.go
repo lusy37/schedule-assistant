@@ -34,7 +34,7 @@ func DefaultDatabasePath() (string, error) {
 	return filepath.Join(dir, "schedule-assistant.db"), nil
 }
 
-func NewStore(path string, seedDemo bool) (*Store, error) {
+func NewStore(path string) (*Store, error) {
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
 		return nil, fmt.Errorf("打开数据库失败: %w", err)
@@ -45,12 +45,6 @@ func NewStore(path string, seedDemo bool) (*Store, error) {
 	if err := store.migrate(context.Background()); err != nil {
 		_ = db.Close()
 		return nil, err
-	}
-	if seedDemo {
-		if err := store.seedDemoSchedules(context.Background(), time.Now()); err != nil {
-			_ = db.Close()
-			return nil, err
-		}
 	}
 	return store, nil
 }
@@ -305,52 +299,6 @@ func (s *Store) MarkRemindersDelivered(ctx context.Context, scheduleID string, r
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("提交提醒发送状态失败: %w", err)
-	}
-	return nil
-}
-
-func (s *Store) seedDemoSchedules(ctx context.Context, base time.Time) error {
-	var count int
-	if err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM schedules`).Scan(&count); err != nil {
-		return fmt.Errorf("检查初始数据失败: %w", err)
-	}
-	if count > 0 {
-		return nil
-	}
-
-	day := time.Date(base.Year(), base.Month(), base.Day(), 0, 0, 0, 0, base.Location())
-	seeds := []struct {
-		title    string
-		start    string
-		end      string
-		location string
-		colour   string
-	}{
-		{"每周跨部门例会", "09:00", "10:00", "会议室 A", "#3b82f6"},
-		{"设计稿评审", "11:30", "12:00", "在线会议", "#10b981"},
-		{"产品路线图规划会议", "14:00", "15:30", "会议室 B", "#f59e0b"},
-		{"同步下周预算", "16:30", "17:00", "办公室", "#8b5cf6"},
-	}
-	for _, seed := range seeds {
-		startAt, err := time.ParseInLocation("2006-01-02 15:04", day.Format("2006-01-02")+" "+seed.start, base.Location())
-		if err != nil {
-			return err
-		}
-		endAt, err := time.ParseInLocation("2006-01-02 15:04", day.Format("2006-01-02")+" "+seed.end, base.Location())
-		if err != nil {
-			return err
-		}
-		_, err = s.SaveSchedule(ctx, domain.ScheduleInput{
-			Title:           seed.title,
-			StartAt:         startAt.Format(time.RFC3339),
-			EndAt:           endAt.Format(time.RFC3339),
-			Location:        seed.location,
-			Colour:          seed.colour,
-			ReminderOffsets: []int{15},
-		})
-		if err != nil {
-			return fmt.Errorf("写入示例日程失败: %w", err)
-		}
 	}
 	return nil
 }

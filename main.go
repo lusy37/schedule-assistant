@@ -35,7 +35,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	store, err := repository.NewStore(databasePath, true)
+	store, err := repository.NewStore(databasePath)
 	if err != nil {
 		log.Fatal(err)
 	}

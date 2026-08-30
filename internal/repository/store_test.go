@@ -10,7 +10,7 @@ import (
 )
 
 func TestStoreScheduleLifecycle(t *testing.T) {
-	store, err := NewStore(filepath.Join(t.TempDir(), "test.db"), false)
+	store, err := NewStore(filepath.Join(t.TempDir(), "test.db"))
 	if err != nil {
 		t.Fatalf("创建测试数据库失败: %v", err)
 	}
@@ -79,5 +79,44 @@ func TestStoreScheduleLifecycle(t *testing.T) {
 	items, err = store.ListSchedules(context.Background())
 	if err != nil || len(items) != 0 {
 		t.Fatalf("删除后仍有日程: len=%d err=%v", len(items), err)
+	}
+}
+
+func TestDeletedSchedulesDoNotReappearAfterReopen(t *testing.T) {
+	databasePath := filepath.Join(t.TempDir(), "reopen.db")
+	store, err := NewStore(databasePath)
+	if err != nil {
+		t.Fatalf("创建测试数据库失败: %v", err)
+	}
+
+	start := time.Date(2026, time.August, 30, 9, 0, 0, 0, time.Local)
+	created, err := store.SaveSchedule(context.Background(), domain.ScheduleInput{
+		Title:           "待删除日程",
+		StartAt:         start.Format(time.RFC3339),
+		EndAt:           start.Add(time.Hour).Format(time.RFC3339),
+		Colour:          "#3b82f6",
+		ReminderOffsets: []int{15},
+	})
+	if err != nil {
+		t.Fatalf("保存日程失败: %v", err)
+	}
+	if err := store.DeleteSchedule(context.Background(), created.ID); err != nil {
+		t.Fatalf("删除日程失败: %v", err)
+	}
+	if err := store.Close(); err != nil {
+		t.Fatalf("关闭数据库失败: %v", err)
+	}
+
+	reopened, err := NewStore(databasePath)
+	if err != nil {
+		t.Fatalf("重新打开数据库失败: %v", err)
+	}
+	defer reopened.Close()
+	items, err := reopened.ListSchedules(context.Background())
+	if err != nil {
+		t.Fatalf("重新读取日程失败: %v", err)
+	}
+	if len(items) != 0 {
+		t.Fatalf("已删除日程不应在重启后恢复: %#v", items)
 	}
 }
